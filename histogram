@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<div id="my_dataviz"></div>
+
+
+<script>
+
+// dimensões da area
+var margin = {top: 10, right: 30, bottom: 30, left: 40},
+    width = 460 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// get the data
+d3.csv("http://www.fixseguros.com.br/histogram/1_OneNum.csv", function(data) {
+
+  // escala do valor de X
+  var x = d3.scaleLinear()
+      .domain([0, 1000])     
+      .range([0, width]);
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  // parametros do histograma
+  var histogram = d3.histogram()
+      .value(function(d) { return d.price; })   // valor vetro
+      .domain(x.domain())  // grafico
+      .thresholds(x.ticks(70)); // relacao numeros
+
+  // relacao de numeros na base de dados
+  var bins = histogram(data);
+
+  // projetar o y
+  var y = d3.scaleLinear()
+      .range([height, 0]);
+      y.domain([0, d3.max(bins, function(d) { return d.length; })]);   
+  svg.append("g")
+      .call(d3.axisLeft(y));
+
+  // elementos do grafico
+  svg.selectAll("rect")
+      .data(bins)
+      .enter()
+      .append("rect")
+        .attr("x", 1)
+        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+        .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
+        .attr("height", function(d) { return height - y(d.length); })
+        .style("fill", "#69b3a2")
+
+});
+</script>
